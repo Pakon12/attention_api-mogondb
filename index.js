@@ -30,10 +30,11 @@ const dataSchema = new mongoose.Schema({
     name:String,
     date: String,
     startTime: String,
-    endTime: String
+    endTime: String,
+    phone:String
 });
 
-dataSchema.index({ room: 1, date: 1, startTime: 1, endTime: 1 });
+dataSchema.index({ room: 1, date: 1, startTime: 1, endTime: 1 ,phone:1});
 
 // Create model based on schema
 const Data = mongoose.model('Data', dataSchema);
@@ -86,7 +87,7 @@ app.post('/api/data', async (req, res) => {
 app.delete('/api/data', async (req, res) => {
     try {
         await Data.deleteMany({});
-        cache.del('allData');
+        cache.flushAll();
         res.json({ message: "All data deleted successfully" });
     } catch (error) {
         res.status(500).json({ error: error.message });
