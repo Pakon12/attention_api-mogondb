@@ -25,7 +25,7 @@ db.on('error', console.error.bind(console, 'MongoDB connection error:'));
 
 // Define schema for the data
 const dataSchema = new mongoose.Schema({
-    id:String,
+    _id:String,
     room: String,
     name:String,
     date: String,
@@ -48,7 +48,7 @@ app.get('/api/data', async (req, res) => {
         if (cachedData) {
             return res.json(cachedData);
         }
-        const data = await Data.find({}, { _id: 0 });
+        const data = await Data.find({});
         cache.set('allData', data, /* optional: specify cache expiration */);
         res.json(data);
     } catch (error) {
@@ -99,7 +99,7 @@ app.delete('/api/data/:id', async (req, res) => {
     const id = req.params.id;
     // console.log(id)
     try {
-        const result = await Data.deleteOne({ id: id });
+        const result = await Data.deleteOne({ _id: id });
         if (result.deletedCount === 1) {
             cache.del('allData');
             res.json({ message: `Data with ID ${id} deleted successfully` });
