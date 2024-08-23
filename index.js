@@ -12,13 +12,14 @@ const cache = new NodeCache();
 dotenv.config()
 
 const app = express();
+
 app.use(bodyParser.json());
 app.use(cors());
 
 // MongoDB connection
 mongoose.connect( process.env.MOGONDB_URL, {
-    useNewUrlParser: true,
-    useUnifiedTopology: true
+    // useNewUrlParser: true,
+    // useUnifiedTopology: true
 });
 const db = mongoose.connection;
 db.on('error', console.error.bind(console, 'MongoDB connection error:'));
@@ -34,10 +35,12 @@ const dataSchema = new mongoose.Schema({
     phone:String
 });
 
+
 dataSchema.index({ room: 1, date: 1, startTime: 1, endTime: 1 ,phone:1});
 
 // Create model based on schema
 const Data = mongoose.model('Data', dataSchema);
+
 
 
 // Get all data
@@ -59,7 +62,7 @@ app.get('/api/data', async (req, res) => {
 // Add data
 app.post('/api/data', async (req, res) => {
     const inputData = req.body;
-    // console.log(inputData)
+    console.log(inputData)
     try {
         const isDuplicate = await Data.findOne({
             room: inputData.room,
@@ -78,6 +81,43 @@ app.post('/api/data', async (req, res) => {
         await Data.create(inputData);
         cache.del('allData');
         res.json({ message: "Data received and stored in MongoDB successfully" });
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+});
+// Add data
+app.post('/api/play/data', async (req, res) => {
+    const inputData = req.body;
+    console.log(inputData)
+    try {
+        await Data.create(inputData);
+        res.json({ message: "Create Data and stored in MongoDB successfully" });
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+});
+
+// Update data by ID
+app.put('/api/data/:id', async (req, res) => {
+    const id = req.params.id;
+    const updateData = req.body;
+    console.log(updateData)
+
+    try {
+        // Validate if updateData contains valid fields to update
+        if (!updateData || Object.keys(updateData).length === 0) {
+            return res.status(400).json({ error: "No data provided for update" });
+        }
+
+        // Find and update the data
+        const result = await Data.findByIdAndUpdate(id, updateData, { new: true });
+
+        if (result) {
+            cache.del('allData');
+            res.json({ message: `Data with ID ${id} updated successfully`, data: result });
+        } else {
+            res.status(404).json({ error: `Data with ID ${id} not found` });
+        }
     } catch (error) {
         res.status(500).json({ error: error.message });
     }
