@@ -88,9 +88,10 @@ app.post('/api/data', async (req, res) => {
 // Add data
 app.post('/api/play/data', async (req, res) => {
     const inputData = req.body;
-    console.log(inputData)
+    // console.log(inputData)
     try {
         await Data.create(inputData);
+        cache.del('allData');
         res.json({ message: "Create Data and stored in MongoDB successfully" });
     } catch (error) {
         res.status(500).json({ error: error.message });
